@@ -27,7 +27,6 @@ function handleLookup() {
   // Get the word entered by the user
   let word = document.getElementById("word").value.trim();
   word = word.replace(/ /g, "-");
-
   // Send a message to the background script to initiate the lookup
   chrome.runtime.sendMessage({ word });
 }

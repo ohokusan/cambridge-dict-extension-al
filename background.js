@@ -23,6 +23,7 @@ async function extractDefinitions(tabId) {
           reject(chrome.runtime.lastError);
         } else {
           const definitions = results[0]?.result;
+
           if (Array.isArray(definitions)) {
             resolve(definitions);
           } else {
@@ -37,47 +38,97 @@ async function extractDefinitions(tabId) {
 // Function to handle the message from the popup script
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   const word = message.word;
-  try {
-    // Open a new tab in the background with the Cambridge Dictionary page for the entered word
-    chrome.tabs.create(
-      {
-        url: `https://dictionary.cambridge.org/dictionary/english/${word}`,
-        active: false,
-      },
-      function (tab) {
-        // Listen for tab updates
-        chrome.tabs.onUpdated.addListener(function onUpdated(
-          tabId,
-          changeInfo,
-          updatedTab
-        ) {
-          if (updatedTab.id === tab.id && changeInfo.status === "complete") {
-            // Remove the listener to avoid multiple executions
-            chrome.tabs.onUpdated.removeListener(onUpdated);
 
-            // Extract the definitions from the page
-            extractDefinitions(tabId)
-              .then((definitions) => {
-                // Send the definitions back to the popup script
-                chrome.runtime.sendMessage({ definitions });
-              })
-              .catch((error) => {
-                console.error("Error extracting definitions:", error);
-                // Send an error message to the popup script
-                chrome.runtime.sendMessage({
-                  error: "Failed to extract definitions",
-                });
-              })
-              .finally(() => {
-                // Close the tab
-                chrome.tabs.remove(tabId);
-              });
+  try {
+    redirectLink(`https://dictionary.cambridge.org/dictionary/english/${word}`)
+      .then(function (link) {
+        // Open a new tab in the background with the Cambridge Dictionary page for the entered word
+
+        // chrome.runtime.sendMessage({ error: link });
+
+        chrome.tabs.create(
+          {
+            url: link,
+            active: false,
+          },
+          function (tab) {
+            // Listen for tab updates
+            chrome.tabs.onUpdated.addListener(function onUpdated(
+              tabId,
+              changeInfo,
+              updatedTab
+            ) {
+              if (
+                updatedTab.id === tab.id &&
+                changeInfo.status === "complete"
+              ) {
+                // Remove the listener to avoid multiple executions
+                chrome.tabs.onUpdated.removeListener(onUpdated);
+
+                // Extract the definitions from the page
+                extractDefinitions(tabId)
+                  .then((definitions) => {
+                    // Send the definitions back to the popup script
+                    chrome.runtime.sendMessage({ definitions });
+                  })
+                  .catch((error) => {
+                    console.error("Error extracting definitions:", error);
+                    // Send an error message to the popup script
+                    chrome.runtime.sendMessage({
+                      error:
+                        "Failed to extract definitions " +
+                        JSON.stringify(error),
+                    });
+                  })
+                  .finally(() => {
+                    // Close the tab
+                    chrome.tabs.remove(tabId);
+                  });
+              }
+            });
           }
-        });
-      }
-    );
+        );
+      })
+      .catch(function (error) {
+        console.error("Error opening tab:", error);
+        alert("Failed to open tab");
+      });
   } catch (error) {
     console.error("Error opening tab:", error);
-    alert("Failed to open tab");
+    chrome.runtime.sendMessage({
+      error: "Failed to extract definitions " + link,
+    });
   }
 });
+
+async function redirectLink(link) {
+  // Final URL with the redirect-checker API
+  const finalUrl = `https://api.redirect-checker.net/?url=${link}`;
+
+  try {
+    // Use fetch to make a request to the redirect-checker API
+    const response = await fetch(finalUrl);
+    const data = await response.json();
+    // const redirectedUrl = JSON.stringify(
+    //   data.data[0].response.info.redirect_url
+    // );
+
+    // Check if the API call was successful
+    if (data && data.success) {
+      const redirectedUrl = data.data[0].response.info.redirect_url.replace(
+        /"/g,
+        ""
+      );
+      return redirectedUrl;
+      // Extract the redirected URL from the API response
+    } else {
+      // If the API call was not successful, return the original link
+      return link;
+    }
+  } catch (error) {
+    // Handle fetch errors
+    console.error("Error fetching redirected URL:", error);
+    // Return the original link in case of error
+    return link;
+  }
+}

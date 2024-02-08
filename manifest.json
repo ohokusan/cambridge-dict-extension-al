@@ -5,7 +5,10 @@
   "description": "Lookup definitions from Cambridge Dictionary.",
   "permissions": ["tabs", "activeTab", "scripting"],
 
-  "host_permissions": ["https://dictionary.cambridge.org/*"],
+  "host_permissions": [
+    "https://dictionary.cambridge.org/*",
+    "https://api.redirect-checker.net/*"
+  ],
   "action": {
     "default_popup": "popup.html",
     "default_icon": "android-chrome-512x512.png"
