@@ -5,15 +5,16 @@ async function extractDefinitions(tabId) {
       {
         target: { tabId: tabId },
         function: () => {
-          const entries = Array.from(
-            document.querySelectorAll(".pr.entry-body__el")
+          let entries = Array.from(
+            document.querySelectorAll(".entry-body__el")
           );
           return entries.map((entry) => {
-            const word = entry.querySelector(".hw.dhw")?.innerText.trim() || "";
+            const word =
+              entry.querySelector(".di-title")?.innerText.trim() || "";
             const partOfSpeech =
               entry.querySelector(".pos.dpos")?.innerText.trim() || "";
             const definition =
-              entry.querySelector(".def.ddef_d.db")?.innerText.trim() || "";
+              entry.querySelector(".ddef_h")?.innerText.trim() || "";
             return { word, partOfSpeech, definition };
           });
         },

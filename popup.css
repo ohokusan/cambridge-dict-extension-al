@@ -74,8 +74,17 @@ ul {
   background-color: #007bff;
   color: #fff;
   border: none;
-  border-radius: 5px;
   cursor: pointer;
+  transition: cubic-bezier();
+}
+
+.input-container button:active {
+  transform: translateY(2px);
+}
+
+.active {
+  transform: translateY(2px);
+  background-color: #5facff !important;
 }
 
 .definitions {

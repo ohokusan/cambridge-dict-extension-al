@@ -1,3 +1,6 @@
+const buttonEl = document.getElementById("lookupButton");
+const inputEl = document.getElementById("word");
+
 // Function to handle the message from the background script
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   if (message.definitions) {
@@ -27,9 +30,28 @@ function handleLookup() {
   // Get the word entered by the user
   let word = document.getElementById("word").value.trim();
   word = word.replace(/ /g, "-");
+
+  buttonEl.classList.add("active");
+  setTimeout(() => {
+    buttonEl.classList.remove("active");
+  }, 200);
+
   // Send a message to the background script to initiate the lookup
   chrome.runtime.sendMessage({ word });
 }
 
 // Attach handleLookup function to the button click event
-document.getElementById("lookupButton").addEventListener("click", handleLookup);
+buttonEl.addEventListener("click", handleLookup);
+
+// Execute a function when the user presses a key on the keyboard
+inputEl.addEventListener("keypress", function (event) {
+  // If the user presses the "Enter" key on the keyboard
+  if (event.key === "Enter") {
+    // Cancel the default action, if needed
+    event.preventDefault();
+    this.blur();
+    // Trigger the button element with a click
+
+    buttonEl.click();
+  }
+});
