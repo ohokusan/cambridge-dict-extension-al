@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Cambridge Dictionary Lookup",
+  "version": "1.0",
+  "description": "Lookup definitions from Cambridge Dictionary.",
+  "permissions": ["tabs", "activeTab", "scripting"],
+
+  "host_permissions": ["https://dictionary.cambridge.org/*"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "android-chrome-512x512.png"
+  },
+  "icons": {
+    "16": "android-chrome-512x512.png",
+    "48": "android-chrome-512x512.png",
+    "128": "android-chrome-512x512.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+}
