@@ -4,22 +4,30 @@ const inputEl = document.getElementById("word");
 // Function to handle the message from the background script
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   if (message.definitions) {
-    // Clear previous content
-    const definitionsList = document.getElementById("definitions");
-    definitionsList.innerHTML = "";
-    // Display the definitions in the popup
-    message.definitions.forEach((definition, index) => {
-      const listItem = document.createElement("li");
-      listItem.innerHTML = `<strong>${index + 1}. ${
-        definition.word
-      }</strong> (${definition.partOfSpeech}): ${definition.definition}`;
-      definitionsList.appendChild(listItem);
-    });
+    displayDefinitions(message.definitions);
+    // Save the definitions in local storage
+    localStorage.setItem(
+      "lastDefinitions",
+      JSON.stringify(message.definitions)
+    );
   } else if (message.error) {
     // Display the error in the popup
     document.getElementById("error").textContent = message.error;
   }
 });
+
+// Function to display definitions in the popup
+function displayDefinitions(definitions) {
+  const definitionsList = document.getElementById("definitions");
+  definitionsList.innerHTML = ""; // Clear previous content
+  definitions.forEach((definition, index) => {
+    const listItem = document.createElement("li");
+    listItem.innerHTML = `<strong>${index + 1}. ${definition.word}</strong> (${
+      definition.partOfSpeech
+    }): ${definition.definition}`;
+    definitionsList.appendChild(listItem);
+  });
+}
 
 // Function to send a message to the background script to initiate the lookup
 function handleLookup() {
@@ -31,6 +39,7 @@ function handleLookup() {
   let word = document.getElementById("word").value.trim();
   word = word.replace(/ /g, "-");
 
+  // Add class for visual feedback
   buttonEl.classList.add("active");
   setTimeout(() => {
     buttonEl.classList.remove("active");
@@ -51,7 +60,14 @@ inputEl.addEventListener("keypress", function (event) {
     event.preventDefault();
     this.blur();
     // Trigger the button element with a click
-
     buttonEl.click();
+  }
+});
+
+// Load last saved definitions from storage when the popup is opened
+document.addEventListener("DOMContentLoaded", function () {
+  const lastDefinitions = JSON.parse(localStorage.getItem("lastDefinitions"));
+  if (lastDefinitions) {
+    displayDefinitions(lastDefinitions);
   }
 });
